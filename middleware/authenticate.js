@@ -4,11 +4,9 @@ dotenv.config();
 
 const authenticate = (req, res, next) => {
     const { token } = req.headers;
-    // console.log('Received token:', token);
     if (!token) {
         return res.status(401).json({ error: "unauthorized Or missing token" });
     }
-
     try {
         req.user = jwt.verify(token, process.env.JWT_Token).user;
         next();
