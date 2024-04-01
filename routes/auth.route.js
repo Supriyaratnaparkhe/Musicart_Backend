@@ -17,7 +17,6 @@ const errorhandler = (res, error) => {
 router.post('/register', async (req, res) => {
     try {
         const { name, mobile, email, password } = req.body;
-        // console.log(name, mobile, email, password);
         const hashedPassword = await bcrypt.hash(password, 10);
         if (!name || !mobile || !email || !password) {
             return res.status(400).json({ error: 'Name, mobile, email, password and are required fields.' });
@@ -91,28 +90,23 @@ router.put('/:userId/:productId', authenticate, async (req, res) => {
     try {
         const productId = req.params.productId;
         const userId = req.params.userId;
-        // Find user by ID and update cart
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
-        // Check if product with given ID exists
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ error: 'Product not found' });
         }
-        // Add product to user's cart
 
         const cartItemIndex = user.CartItems.findIndex(item => item.productId.toString() === productId);
         if (cartItemIndex !== -1) {
-            // If the product exists, update the quantity
             if (user.CartItems[cartItemIndex].quantity < 8) {
                 user.CartItems[cartItemIndex].quantity += 1;
             } else {
                 return res.status(400).json({ error: 'maximum limit reached' });
             }
         } else {
-            // If the product does not exist, add it to the cart
             user.CartItems.push({ productId: productId, quantity: 1 });
         }
         user.CartItemNumber += 1;
@@ -150,17 +144,13 @@ router.put('/:userId', authenticate, async (req, res) => {
             return res.status(400).json({ error: "Invalid user ID " });
         }
 
-        // Find the user by userId
-        // const user = await User.findOne(userId);
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Add feedback to user's feedback array
         user.FeedBack.push({ feedbackType, feedbackText });
 
-        // Save the updated user object
         await user.save();
         console.log("objectId valid");
 
@@ -175,14 +165,11 @@ router.post('/:userId', authenticate, async (req, res) => {
         const { orderPerson, address, paymentMode, totalAmount, addedItems } = req.body;
         const { userId } = req.params;
 
-        // Find the user by ID
         const user = await User.findById(userId);
 
-        // Add the new invoice
         user.invoices.push({ orderPerson, address, paymentMode, totalAmount, addedItems });
         await user.save();
 
-        // Empty the CartItems array and set CartItemNumber to 0
         user.CartItems = [];
         user.CartItemNumber = 0;
         await user.save();
@@ -197,19 +184,16 @@ router.post('/:userId', authenticate, async (req, res) => {
 router.get('/getinvoices/:userId', authenticate, async (req, res) => {
     try {
         const userId = req.params.userId;
-        // Query the database for all invoices
         const user = await User.findById(userId, 'invoices');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
         const invoices = user.invoices;
 
-        // Check if any invoices were found
         if (invoices.length === 0) {
             return res.status(404).json({ message: 'No invoices found' });
         }
 
-        // If invoices were found, return them in the response
         res.status(200).json(invoices);
     } catch (error) {
         console.error(error);
@@ -220,24 +204,15 @@ router.get('/getinvoices/:userId', authenticate, async (req, res) => {
 router.get('/invoicedetail/:userId/:invoiceId', authenticate, async (req, res) => {
     try {
         const { userId, invoiceId } = req.params;
-
-        // Find the user by userId
         const user = await User.findById(userId);
-
-        // Check if the user exists
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-
-        // Find the invoice by invoiceId within the user's invoices array
         const invoice = user.invoices.find(inv => inv._id == invoiceId);
 
-        // Check if the invoice exists
         if (!invoice) {
             return res.status(404).json({ message: 'Invoice not found' });
         }
-
-        // If the user and invoice exist, return the invoice details
         res.status(200).json(invoice);
     } catch (error) {
         console.error(error);
